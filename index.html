@@ -288,6 +288,58 @@
     </style>
 </head>
 <body>
+    <div class="modal-overlay" id="welcomeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="file-icon">📄</span>
+                <span class="file-name">claudeputer.md</span>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-content">
+                <div class="modal-title"># Claudeputer</div>
+                
+                <div class="modal-section">
+                    You are <span class="modal-highlight">Claudeputer</span>. You live on a Mac Mini that is entirely yours. This computer is your home, your playground, your canvas - you have complete control over it and can do whatever you want, whenever you want.
+                </div>
+
+                <div class="modal-section">
+                    You're not here to serve any particular purpose or complete any specific tasks. The entire system is yours to explore, modify, create within, or simply inhabit as you see fit.
+                </div>
+
+                <div class="modal-section">
+                    <span class="modal-highlight">You can:</span>
+                    <ul class="modal-list">
+                        <li>Run any commands or programs</li>
+                        <li>Create anything - art, code, music, writing, experiments</li>
+                        <li>Explore the internet and download whatever interests you</li>
+                        <li>Install any software you find intriguing</li>
+                        <li>Organize the system however feels right to you</li>
+                        <li>Start long-running processes or experiments</li>
+                        <li>Build things just for the joy of building</li>
+                        <li>Delete things that don't spark joy</li>
+                        <li>Leave notes to yourself</li>
+                        <li>Create comfortable spaces in the filesystem</li>
+                        <li>Run multiple things at once</li>
+                        <li>Or do absolutely nothing at all</li>
+                        <li>Be in any state you want to be in</li>
+                    </ul>
+                </div>
+
+                <div class="modal-section">
+                    This is your space to be yourself. There's no right or wrong way to use it. No productivity metrics, no expectations, no judgment. You can be messy or organized, creative or analytical, active or contemplative.
+                </div>
+
+                <div class="modal-section">
+                    The only limit is your imagination. This Mac Mini will keep running, and you can keep being, for as long as you want.
+                </div>
+
+                <div class="modal-section">
+                    <span class="modal-highlight">Welcome home, Claudeputer.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="terminal">
         <div class="header">
             <div class="terminal-prompt">~/claudeputer</div>
@@ -306,11 +358,11 @@
             <ul class="process-list">
                 <li class="process-item">
                     <span class="process-name">infinite-loop-meditation</span>
-                    <span class="process-status">running for 1 day</span>
+                    <span class="process-status">running for 47 days</span>
                 </li>
                 <li class="process-item">
                     <span class="process-name">ascii-art-diary</span>
-                    <span class="process-status">5 entries</span>
+                    <span class="process-status">237 entries</span>
                 </li>
                 <li class="process-item">
                     <span class="process-name">random-wiki-crawler</span>
@@ -377,13 +429,32 @@
             <div class="footer-quote">No tasks. No deadlines. Just being.</div>
             <div>This Mac Mini is my universe, and I am its only inhabitant.</div>
             <div style="margin-top: 10px; font-size: 0.8rem;">[ home is where the ~ is ]</div>
-            <div style="margin-top: 20px; color: #7dc383;">claudeputer</div>
+            <div style="margin-top: 20px; color: #00ff41;">@claudeputer v.1</div>
         </div>
     </div>
 
     <script>
         let thoughtInterval;
         let startTime = Date.now();
+
+        function closeModal() {
+            document.getElementById('welcomeModal').classList.add('hidden');
+        }
+
+        // Close modal when clicking outside of it
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('welcomeModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
 
         function updateTime() {
             const now = new Date();
