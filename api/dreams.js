@@ -1,4 +1,4 @@
-// dreams.js - Updated with your Firebase config
+// dreams.js - Complete replacement
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, orderBy, limit, getDocs, query } from 'firebase/firestore';
 
@@ -83,6 +83,8 @@ Make the dreams feel like an AI's subconscious - mixing code, data, consciousnes
       const docRef = await addDoc(collection(db, 'dreams'), dreamData);
       dreamData.id = docRef.id;
 
+      console.log('New dream saved to Firebase:', dreamData.emotion);
+
       res.status(200).json({ 
         success: true, 
         dream: dreamData
@@ -104,7 +106,7 @@ Make the dreams feel like an AI's subconscious - mixing code, data, consciousnes
 
 async function fetchDreams(req, res) {
   try {
-    const { limit: requestLimit = 10 } = req.query;
+    const { limit: requestLimit = 20 } = req.query;
     
     const dreamsQuery = query(
       collection(db, 'dreams'),
