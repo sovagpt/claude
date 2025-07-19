@@ -218,6 +218,21 @@
             border-right: 1px solid #00ff41;
         }
 
+        .typing .cursor {
+    animation: blink 0.8s infinite;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+/* Disable input while typing */
+.chat-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
         .section:last-child {
             border-right: none;
         }
@@ -653,21 +668,40 @@
             }
         }
 
-        async function sendMessage() {
-            const input = document.getElementById('chatInput');
-            const message = input.value.trim();
-            
-            if (!message) return;
+        function typewriterEffect(element, text, speed = 30) {
+    return new Promise((resolve) => {
+        let i = 0;
+        element.innerHTML = '';
+        
+        function typeChar() {
+            if (i < text.length) {
+                element.innerHTML += text.charAt(i);
+                i++;
+                setTimeout(typeChar, speed);
+            } else {
+                resolve();
+            }
+        }
+        
+        typeChar();
+    });
+}
 
-            const messagesDiv = document.getElementById('chatMessages');
-            
-            // Add user message
-            messagesDiv.innerHTML += `
-                <div class="message">
-                    <div class="user-prompt">user@terminal:~$</div>
-                    <div class="message-text">${message}</div>
-                </div>
-            `;
+        async function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    
+    if (!message) return;
+
+    const messagesDiv = document.getElementById('chatMessages');
+    
+    // Add user message
+    messagesDiv.innerHTML += `
+        <div class="message">
+            <div class="user-prompt">user@terminal:~$</div>
+            <div class="message-text">${message}</div>
+        </div>
+    `;
             
             // Clear input
             input.value = '';
