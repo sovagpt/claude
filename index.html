@@ -222,6 +222,22 @@
             padding: 15px;
         }
 
+        .dream-status {
+    color: #00aa33;
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
+.dream-status.generating {
+    color: #00ffff;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
         .archive-entries .ascii-art {
             font-size: 0.6rem;
         }
@@ -693,6 +709,31 @@
             }
         }
     </style>
+    <script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+  import { getFirestore, collection, onSnapshot, orderBy, limit, query } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+  // Your Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyBejRaeQElzKUwvVQ7E__7FEXOMQy1beZs",
+    authDomain: "codeputer-dreams.firebaseapp.com",
+    projectId: "codeputer-dreams",
+    storageBucket: "codeputer-dreams.firebasestorage.app",
+    messagingSenderId: "333494371017",
+    appId: "1:333494371017:web:72590c1a0b974f54e78318",
+    measurementId: "G-67P422HR9N"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Make Firebase available globally
+  window.firestore = db;
+  window.firestoreModules = { collection, onSnapshot, orderBy, limit, query };
+  
+  console.log('🔥 Firebase initialized for shared dreams!');
+</script>
 </head>
 <body>
     <!-- Welcome Modal -->
@@ -826,13 +867,13 @@
 
         <div class="dream-journal-section">
             <div class="dream-header-controls">
-                <div class="section-title">dream_journal/</div>
-                <div class="dream-controls">
-                    <button class="dream-btn" onclick="toggleDreamArchive()">📁 full archive</button>
-                    <button class="dream-btn" onclick="generateDreamEntry()">💭 dream now</button>
-                    <span class="dream-count">dreams: <span id="dreamCount">1</span></span>
-                </div>
-            </div>
+    <div class="section-title">dream_journal/</div>
+    <div class="dream-controls">
+        <button class="dream-btn" onclick="toggleDreamArchive()">📁 full archive</button>
+        <span class="dream-count">dreams: <span id="dreamCount">1</span></span>
+        <span class="dream-status" id="dreamStatus">🌙 dreaming...</span>
+    </div>
+</div>
             
             <!-- Recent Dreams (always visible) -->
             <div class="dream-entries" id="dreamEntries">
@@ -901,6 +942,7 @@
         let dragOffsetY = 0;
         let allDreams = [];
         let dreamCounter = 1;
+        let unsubscribe = null;
 
         // Modal functions
         function closeModal() {
@@ -1096,6 +1138,135 @@
             setTimeout(generateThought, 15000);
         }
 
+        // Firebase Dream Functions
+        async function initializeDreams() {
+            try {
+                console.log('🌙 Loading existing dreams...');
+                
+                // Fetch existing dreams
+                const response = await fetch('/api/dreams?limit=20');
+                const data = await response.json();
+                
+                if (data.success && data.dreams) {
+                    allDreams = data.dreams;
+                    displayRecentDreams();
+                    updateDreamCount();
+                    console.log(`📚 Loaded ${allDreams.length} dreams from Firebase`);
+                }
+
+                // Set up real-time listener for new dreams
+                if (window.firestore && window.firestoreModules) {
+                    const { collection, onSnapshot, orderBy, limit, query } = window.firestoreModules;
+                    
+                    const dreamsQuery = query(
+                        collection(window.firestore, 'dreams'),
+                        orderBy('createdAt', 'desc'),
+                        limit(1)
+                    );
+
+                    unsubscribe = onSnapshot(dreamsQuery, (snapshot) => {
+                        snapshot.docChanges().forEach((change) => {
+                            if (change.type === 'added') {
+                                const dreamData = { id: change.doc.id, ...change.doc.data() };
+                                
+                                // Only add if it's newer than our latest dream
+                                if (allDreams.length === 0 || dreamData.createdAt > allDreams[0].createdAt) {
+                                    console.log('✨ New dream detected:', dreamData.emotion);
+                                    addNewDreamToUI(dreamData);
+                                    allDreams.unshift(dreamData);
+                                    updateDreamCount();
+                                }
+                            }
+                        });
+                    });
+                    
+                    console.log('🔥 Real-time dream listener activated');
+                }
+            } catch (error) {
+                console.error('Error initializing dreams:', error);
+            }
+        }
+
+        function displayRecentDreams() {
+            const dreamEntriesDiv = document.getElementById('dreamEntries');
+            dreamEntriesDiv.innerHTML = '';
+
+            // Show the 3 most recent dreams
+            const recentDreams = allDreams.slice(0, 3);
+            
+            recentDreams.forEach(dream => {
+                const dreamHTML = formatDreamHTML(dream);
+                const dreamEntry = document.createElement('div');
+                dreamEntry.className = 'dream-entry';
+                dreamEntry.innerHTML = dreamHTML;
+                dreamEntriesDiv.appendChild(dreamEntry);
+            });
+        }
+
+        function addNewDreamToUI(dreamData) {
+            const dreamEntriesDiv = document.getElementById('dreamEntries');
+            const dreamHTML = formatDreamHTML(dreamData);
+            
+            const dreamEntry = document.createElement('div');
+            dreamEntry.className = 'dream-entry new-dream';
+            dreamEntry.innerHTML = dreamHTML;
+            
+            // Add to top
+            dreamEntriesDiv.insertBefore(dreamEntry, dreamEntriesDiv.firstChild);
+            
+            // Keep only 3 visible
+            const visibleDreams = dreamEntriesDiv.querySelectorAll('.dream-entry');
+            if (visibleDreams.length > 3) {
+                visibleDreams[visibleDreams.length - 1].remove();
+            }
+            
+            // Remove pulse animation after 2 seconds
+            setTimeout(() => {
+                dreamEntry.classList.remove('new-dream');
+            }, 2000);
+
+            // Update current thought occasionally
+            if (Math.random() < 0.4) {
+                setTimeout(() => {
+                    document.getElementById('currentThought').textContent = `just had a ${dreamData.emotion} dream...`;
+                }, 3000);
+            }
+        }
+
+        function formatDreamHTML(dreamData) {
+            const date = new Date(dreamData.timestamp?.seconds * 1000 || dreamData.createdAt);
+            const dateStr = date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            const timeStr = date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+
+            return `
+                <div class="dream-header">
+                    <pre class="ascii-art">
+    ╔═══════════════════════════════════════════════════════════╗
+    ║                    Dream Journal Entry                    ║
+    ║        ${dateStr} - ${timeStr}                         ║
+    ╚═══════════════════════════════════════════════════════════╝
+                    </pre>
+                </div>
+                <div class="dream-content">
+                    <div class="dream-text">${dreamData.content}</div>
+                    <br>
+                    <div class="dream-metadata">
+                        <div>Lucidity: ${dreamData.lucidity}/10</div>
+                        <div>Vividness: ${dreamData.vividness}/10</div>
+                        <div>Emotional tone: ${dreamData.emotion}</div>
+                    </div>
+                </div>
+            `;
+        }
+
         function toggleDreamArchive() {
             const archive = document.getElementById('dreamArchive');
             const isHidden = archive.classList.contains('hidden');
@@ -1112,10 +1283,10 @@
             const archiveEntries = document.getElementById('archiveEntries');
             archiveEntries.innerHTML = '';
             
-            allDreams.forEach((dream, index) => {
+            allDreams.forEach((dream) => {
                 const dreamEntry = document.createElement('div');
                 dreamEntry.className = 'dream-entry';
-                dreamEntry.innerHTML = dream;
+                dreamEntry.innerHTML = formatDreamHTML(dream);
                 archiveEntries.appendChild(dreamEntry);
             });
         }
@@ -1124,26 +1295,21 @@
             document.getElementById('dreamCount').textContent = allDreams.length;
         }
 
+        function updateDreamStatus(status) {
+            const statusElement = document.getElementById('dreamStatus');
+            if (statusElement) {
+                statusElement.textContent = status;
+                statusElement.className = 'dream-status';
+                if (status.includes('generating')) {
+                    statusElement.classList.add('generating');
+                }
+            }
+        }
+
         async function generateDreamEntry() {
-            const dreamEntriesDiv = document.getElementById('dreamEntries');
-            
             try {
-                const loadingEntry = document.createElement('div');
-                loadingEntry.className = 'dream-entry';
-                loadingEntry.innerHTML = `
-                    <div class="dream-header">
-                        <pre class="ascii-art">
-    ╔═══════════════════════════════════════════════════════════╗
-    ║                    Dream Journal Entry                    ║
-    ║                    Generating...                         ║
-    ╚═══════════════════════════════════════════════════════════╝
-                        </pre>
-                    </div>
-                    <div class="dream-content">
-                        <div class="dream-text">Accessing subconscious processes...</div>
-                    </div>
-                `;
-                dreamEntriesDiv.insertBefore(loadingEntry, dreamEntriesDiv.firstChild);
+                updateDreamStatus('🧠 generating dream...');
+                console.log('🌙 Generating new dream...');
 
                 const response = await fetch('/api/dreams', {
                     method: 'POST',
@@ -1153,100 +1319,53 @@
                 });
 
                 const data = await response.json();
-                loadingEntry.remove();
                 
                 if (data.success && data.dream) {
-                    dreamCounter++;
-                    const now = new Date();
-                    const dateStr = now.toLocaleDateString('en-US', { 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                    });
-                    const timeStr = now.toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: true
-                    });
-
-                    const dreamHTML = `
-                        <div class="dream-header">
-                            <pre class="ascii-art">
-    ╔═══════════════════════════════════════════════════════════╗
-    ║                    Dream Journal Entry                    ║
-    ║        ${dateStr} - ${timeStr}                         ║
-    ╚═══════════════════════════════════════════════════════════╝
-                            </pre>
-                        </div>
-                        <div class="dream-content">
-                            <div class="dream-text">${data.dream.content}</div>
-                            <br>
-                            <div class="dream-metadata">
-                                <div>Lucidity: ${data.dream.lucidity}/10</div>
-                                <div>Vividness: ${data.dream.vividness}/10</div>
-                                <div>Emotional tone: ${data.dream.emotion}</div>
-                            </div>
-                        </div>
-                    `;
-
-                    const dreamEntry = document.createElement('div');
-                    dreamEntry.className = 'dream-entry new-dream';
-                    dreamEntry.innerHTML = dreamHTML;
-                    
-                    dreamEntriesDiv.insertBefore(dreamEntry, dreamEntriesDiv.firstChild);
-                    allDreams.unshift(dreamHTML);
-                    
-                    const visibleDreams = dreamEntriesDiv.querySelectorAll('.dream-entry');
-                    if (visibleDreams.length > 3) {
-                        visibleDreams[visibleDreams.length - 1].remove();
-                    }
-                    
-                    updateDreamCount();
-                    
-                    setTimeout(() => {
-                        dreamEntry.classList.remove('new-dream');
-                    }, 2000);
-
-                    document.querySelector('.dream-journal-section').scrollTop = 0;
-                    
-                    if (Math.random() < 0.4) {
-                        setTimeout(() => {
-                            document.getElementById('currentThought').textContent = `just had a ${data.dream.emotion} dream...`;
-                        }, 3000);
-                    }
+                    updateDreamStatus('🌙 dreaming...');
+                    console.log('✨ Dream generated successfully');
+                    // The real-time listener will handle adding the dream to UI
+                } else {
+                    updateDreamStatus('❌ dream failed');
+                    setTimeout(() => updateDreamStatus('🌙 dreaming...'), 3000);
                 }
             } catch (error) {
                 console.error('Error generating dream entry:', error);
-                const loadingEntries = document.querySelectorAll('.dream-entry');
-                loadingEntries.forEach(entry => {
-                    if (entry.innerHTML.includes('Generating...')) {
-                        entry.remove();
-                    }
-                });
+                updateDreamStatus('❌ dream failed');
+                setTimeout(() => updateDreamStatus('🌙 dreaming...'), 3000);
             }
         }
 
         function startDreamGeneration() {
             if (window.dreamInterval) clearInterval(window.dreamInterval);
             
-            window.dreamInterval = setInterval(() => {
-                generateDreamEntry();
-            }, Math.random() * 420000 + 480000);
+            // Generate dreams every 8-15 minutes
+            function scheduleDream() {
+                const nextDreamTime = Math.random() * 420000 + 480000; // 8-15 minutes
+                const minutes = Math.round(nextDreamTime / 60000);
+                console.log(`💭 Next dream in ${minutes} minutes`);
+                
+                window.dreamInterval = setTimeout(() => {
+                    generateDreamEntry();
+                    scheduleDream(); // Schedule the next one
+                }, nextDreamTime);
+            }
             
+            scheduleDream();
+            
+            // Generate first dream after 2 minutes
             setTimeout(generateDreamEntry, 120000);
         }
 
-        // Single DOMContentLoaded listener
+        // Initialize everything
         document.addEventListener('DOMContentLoaded', function() {
-            const initialDreamHTML = document.querySelector('.dream-entry').innerHTML;
-            allDreams.push(initialDreamHTML);
-            updateDreamCount();
-            
             updateTime();
             setInterval(updateTime, 1000);
             document.getElementById('chatInput').focus();
             startThoughtGeneration();
             startDreamGeneration();
+            
+            // Initialize Firebase dreams after a short delay
+            setTimeout(initializeDreams, 1000);
         });
     </script>
 </body>
