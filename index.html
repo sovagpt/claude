@@ -899,7 +899,7 @@
         let isDragging = false;
         let dragOffsetX = 0;
         let dragOffsetY = 0;
-        let allDreams = []; // Store all dreams for the archive
+        let allDreams = [];
         let dreamCounter = 1;
 
         // Modal functions
@@ -907,7 +907,6 @@
             document.getElementById('welcomeModal').classList.add('hidden');
         }
 
-        // Close modal when clicking outside of it
         document.addEventListener('click', function(event) {
             const modal = document.getElementById('welcomeModal');
             const modalWindow = document.getElementById('modalWindow');
@@ -916,7 +915,6 @@
             }
         });
 
-        // Close modal with Escape key
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
                 closeModal();
@@ -974,7 +972,6 @@
             }
         }
 
-        // Typewriter effect function
         function typewriterEffect(element, text, speed = 25) {
             return new Promise((resolve) => {
                 let i = 0;
@@ -1002,7 +999,6 @@
 
             const messagesDiv = document.getElementById('chatMessages');
             
-            // Add user message
             messagesDiv.innerHTML += `
                 <div class="message">
                     <div class="user-prompt">user@terminal:~$</div>
@@ -1010,12 +1006,10 @@
                 </div>
             `;
             
-            // Clear input and show loading
             input.value = '';
             input.placeholder = 'processing...';
             input.disabled = true;
             
-            // Create response container
             const responseMessage = document.createElement('div');
             responseMessage.className = 'message';
             responseMessage.innerHTML = `
@@ -1048,15 +1042,10 @@
                 await typewriterEffect(responseElement, `network error: ${error.message}`, 25);
             }
             
-            // Re-enable input
             input.disabled = false;
             input.placeholder = 'type your message...';
             input.focus();
-            
-            // Remove the ID to avoid conflicts
             responseElement.removeAttribute('id');
-            
-            // Scroll to bottom
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
@@ -1083,12 +1072,10 @@
                         </div>
                     ` + thoughtsDiv.innerHTML;
                     
-                    // Update current thought occasionally
                     if (Math.random() < 0.3) {
                         document.getElementById('currentThought').textContent = data.thought;
                     }
                     
-                    // Keep only the last 8 thoughts
                     const thoughts = thoughtsDiv.querySelectorAll('.thought-entry');
                     if (thoughts.length > 8) {
                         thoughts[thoughts.length - 1].remove();
@@ -1100,18 +1087,15 @@
         }
 
         function startThoughtGeneration() {
-            // Generate a thought every 2-4 minutes
             if (thoughtInterval) clearInterval(thoughtInterval);
             
             thoughtInterval = setInterval(() => {
                 generateThought();
-            }, Math.random() * 120000 + 120000); // Random between 2-4 minutes
+            }, Math.random() * 120000 + 120000);
             
-            // Generate first thought after 15 seconds
             setTimeout(generateThought, 15000);
         }
 
-        // Dream Archive Functions
         function toggleDreamArchive() {
             const archive = document.getElementById('dreamArchive');
             const isHidden = archive.classList.contains('hidden');
@@ -1128,7 +1112,6 @@
             const archiveEntries = document.getElementById('archiveEntries');
             archiveEntries.innerHTML = '';
             
-            // Add all dreams to archive (newest first)
             allDreams.forEach((dream, index) => {
                 const dreamEntry = document.createElement('div');
                 dreamEntry.className = 'dream-entry';
@@ -1145,7 +1128,6 @@
             const dreamEntriesDiv = document.getElementById('dreamEntries');
             
             try {
-                // Show loading state
                 const loadingEntry = document.createElement('div');
                 loadingEntry.className = 'dream-entry';
                 loadingEntry.innerHTML = `
@@ -1171,8 +1153,6 @@
                 });
 
                 const data = await response.json();
-                
-                // Remove loading entry
                 loadingEntry.remove();
                 
                 if (data.success && data.dream) {
@@ -1213,30 +1193,22 @@
                     dreamEntry.className = 'dream-entry new-dream';
                     dreamEntry.innerHTML = dreamHTML;
                     
-                    // Add to recent dreams (top of visible list)
                     dreamEntriesDiv.insertBefore(dreamEntry, dreamEntriesDiv.firstChild);
-                    
-                    // Add to archive (newest first)
                     allDreams.unshift(dreamHTML);
                     
-                    // Keep only the last 3 dreams visible in main view
                     const visibleDreams = dreamEntriesDiv.querySelectorAll('.dream-entry');
                     if (visibleDreams.length > 3) {
                         visibleDreams[visibleDreams.length - 1].remove();
                     }
                     
-                    // Update counter
                     updateDreamCount();
                     
-                    // Remove the pulse animation after 2 seconds
                     setTimeout(() => {
                         dreamEntry.classList.remove('new-dream');
                     }, 2000);
 
-                    // Scroll to top to show new dream
                     document.querySelector('.dream-journal-section').scrollTop = 0;
                     
-                    // Add to current thought occasionally
                     if (Math.random() < 0.4) {
                         setTimeout(() => {
                             document.getElementById('currentThought').textContent = `just had a ${data.dream.emotion} dream...`;
@@ -1245,8 +1217,6 @@
                 }
             } catch (error) {
                 console.error('Error generating dream entry:', error);
-                
-                // Remove loading entry if it exists
                 const loadingEntries = document.querySelectorAll('.dream-entry');
                 loadingEntries.forEach(entry => {
                     if (entry.innerHTML.includes('Generating...')) {
@@ -1257,20 +1227,17 @@
         }
 
         function startDreamGeneration() {
-            // Generate a dream every 8-15 minutes
             if (window.dreamInterval) clearInterval(window.dreamInterval);
             
             window.dreamInterval = setInterval(() => {
                 generateDreamEntry();
-            }, Math.random() * 420000 + 480000); // Random between 8-15 minutes
+            }, Math.random() * 420000 + 480000);
             
-            // Generate first dream after 2 minutes
             setTimeout(generateDreamEntry, 120000);
         }
 
-        // Initialize everything
+        // Single DOMContentLoaded listener
         document.addEventListener('DOMContentLoaded', function() {
-            // Store the initial dream in the archive
             const initialDreamHTML = document.querySelector('.dream-entry').innerHTML;
             allDreams.push(initialDreamHTML);
             updateDreamCount();
