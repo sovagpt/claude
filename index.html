@@ -899,6 +899,8 @@
         let isDragging = false;
         let dragOffsetX = 0;
         let dragOffsetY = 0;
+        let allDreams = []; // Store all dreams for the archive
+        let dreamCounter = 1;
 
         // Modal functions
         function closeModal() {
@@ -1097,18 +1099,25 @@
             }
         }
 
-        // Enhanced Dream Archive JavaScript - Add to your existing <script> section
+        function startThoughtGeneration() {
+            // Generate a thought every 2-4 minutes
+            if (thoughtInterval) clearInterval(thoughtInterval);
+            
+            thoughtInterval = setInterval(() => {
+                generateThought();
+            }, Math.random() * 120000 + 120000); // Random between 2-4 minutes
+            
+            // Generate first thought after 15 seconds
+            setTimeout(generateThought, 15000);
+        }
 
-        let allDreams = []; // Store all dreams for the archive
-        let dreamCounter = 1;
-
+        // Dream Archive Functions
         function toggleDreamArchive() {
             const archive = document.getElementById('dreamArchive');
             const isHidden = archive.classList.contains('hidden');
             
             if (isHidden) {
                 archive.classList.remove('hidden');
-                // Populate archive with all dreams
                 updateArchive();
             } else {
                 archive.classList.add('hidden');
@@ -1259,7 +1268,7 @@
             setTimeout(generateDreamEntry, 120000);
         }
 
-        // Initialize dreams array with the initial dream
+        // Initialize everything
         document.addEventListener('DOMContentLoaded', function() {
             // Store the initial dream in the archive
             const initialDreamHTML = document.querySelector('.dream-entry').innerHTML;
@@ -1271,101 +1280,6 @@
             document.getElementById('chatInput').focus();
             startThoughtGeneration();
             startDreamGeneration();
-        });
-
-        function startThoughtGeneration() {
-            // Generate a thought every 2-4 minutes
-            if (thoughtInterval) clearInterval(thoughtInterval);
-            
-            thoughtInterval = setInterval(() => {
-                generateThought();
-            }, Math.random() * 120000 + 120000); // Random between 2-4 minutes
-            
-            // Generate first thought after 15 seconds
-            setTimeout(generateThought, 15000);
-        }
-
-        async function generateDreamEntry() {
-            const dreamEntriesDiv = document.getElementById('dreamEntries');
-            
-            try {
-                const response = await fetch('/api/dreams', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                });
-
-                const data = await response.json();
-                
-                if (data.success && data.dream) {
-                    const now = new Date();
-                    const dateStr = now.toLocaleDateString('en-US', { 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                    });
-                    const timeStr = now.toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: true
-                    });
-
-                    const dreamEntry = document.createElement('div');
-                    dreamEntry.className = 'dream-entry';
-                    dreamEntry.innerHTML = `
-                        <div class="dream-header">
-                            <pre class="ascii-art">
-    ╔═══════════════════════════════════════════════════════════╗
-    ║                    Dream Journal Entry                    ║
-    ║        ${dateStr} - ${timeStr}                         ║
-    ╚═══════════════════════════════════════════════════════════╝
-                            </pre>
-                        </div>
-                        <div class="dream-content">
-                            <div class="dream-text">${data.dream.content}</div>
-                            <br>
-                            <div class="dream-metadata">
-                                <div>Lucidity: ${data.dream.lucidity}/10</div>
-                                <div>Vividness: ${data.dream.vividness}/10</div>
-                                <div>Emotional tone: ${data.dream.emotion}</div>
-                            </div>
-                        </div>
-                    `;
-                    
-                    // Add to top of dream entries
-                    dreamEntriesDiv.insertBefore(dreamEntry, dreamEntriesDiv.firstChild);
-                    
-                    // Keep only the last 5 dream entries
-                    const dreams = dreamEntriesDiv.querySelectorAll('.dream-entry');
-                    if (dreams.length > 5) {
-                        dreams[dreams.length - 1].remove();
-                    }
-                }
-            } catch (error) {
-                console.error('Error generating dream entry:', error);
-            }
-        }
-
-        function startDreamGeneration() {
-            // Generate a dream every 8-15 minutes
-            if (window.dreamInterval) clearInterval(window.dreamInterval);
-            
-            window.dreamInterval = setInterval(() => {
-                generateDreamEntry();
-            }, Math.random() * 420000 + 480000); // Random between 8-15 minutes
-            
-            // Generate first dream after 2 minutes
-            setTimeout(generateDreamEntry, 120000);
-        }
-
-        // Initialize
-         document.addEventListener('DOMContentLoaded', function() {
-            updateTime();
-            setInterval(updateTime, 1000);
-            document.getElementById('chatInput').focus();
-            startThoughtGeneration();
-            startDreamGeneration(); // Add this line
         });
     </script>
 </body>
