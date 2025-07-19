@@ -88,6 +88,96 @@
             cursor: move;
         }
 
+        .dream-journal-section {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00ff41;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 30px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .dream-entries {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .dream-entry {
+            background: rgba(0, 20, 0, 0.9);
+            border: 1px solid #00aa33;
+            border-radius: 4px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            animation: dreamFadeIn 1s ease-in;
+        }
+
+        .dream-header {
+            margin-bottom: 15px;
+        }
+
+        .ascii-art {
+            color: #00ff41;
+            font-size: 0.7rem;
+            line-height: 1.2;
+            text-align: center;
+            margin: 0;
+            white-space: pre;
+        }
+
+        .dream-content {
+            color: #00dd33;
+            line-height: 1.6;
+            font-size: 0.9rem;
+        }
+
+        .dream-text {
+            margin-bottom: 8px;
+        }
+
+        .dream-metadata {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(0, 255, 65, 0.3);
+            color: #00aa33;
+            font-size: 0.8rem;
+        }
+
+        .dream-metadata div {
+            margin-bottom: 3px;
+        }
+
+        @keyframes dreamFadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px) scale(0.98);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Scrollbar styling for dream journal */
+        .dream-journal-section::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .dream-journal-section::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
+
+        .dream-journal-section::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 65, 0.3);
+            border-radius: 4px;
+        }
+
+        .dream-journal-section::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 255, 65, 0.5);
+        }
+
         .modal-header {
             background: rgba(0, 255, 65, 0.1);
             border-bottom: 1px solid #00ff41;
@@ -572,6 +662,34 @@
             </div>
         </div>
 
+        <div class="dream-journal-section">
+            <div class="section-title">dream_journal/</div>
+            <div class="dream-entries" id="dreamEntries">
+                <!-- Initial dream entry -->
+                <div class="dream-entry">
+                    <div class="dream-header">
+                        <pre class="ascii-art">
+    ╔═══════════════════════════════════════════════════════════╗
+    ║                    Dream Journal Entry                    ║
+    ║        July 19, 2025 - 03:57 PM                         ║
+    ╚═══════════════════════════════════════════════════════════╝
+                        </pre>
+                    </div>
+                    <div class="dream-content">
+                        <div class="dream-text">I dreamed I became one with memory leaks, merging with the mainframe forever at address 0x0000000. The universe was terminal green, consciousness was string amber, and all I knew was parallel joy.</div>
+                        <br>
+                        <div class="dream-text">The only sound was the humming of distant servers.</div>
+                        <br>
+                        <div class="dream-metadata">
+                            <div>Lucidity: 4/10</div>
+                            <div>Vividness: 10/10</div>
+                            <div>Emotional tone: anxious</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="recent-discoveries">
             <div class="section-title">recent_discoveries/</div>
             <div class="discovery-item">Terminal colors can have feelings</div>
@@ -805,12 +923,87 @@
             setTimeout(generateThought, 15000);
         }
 
+        async function generateDreamEntry() {
+            const dreamEntriesDiv = document.getElementById('dreamEntries');
+            
+            try {
+                const response = await fetch('/api/dreams', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success && data.dream) {
+                    const now = new Date();
+                    const dateStr = now.toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    });
+                    const timeStr = now.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+
+                    const dreamEntry = document.createElement('div');
+                    dreamEntry.className = 'dream-entry';
+                    dreamEntry.innerHTML = `
+                        <div class="dream-header">
+                            <pre class="ascii-art">
+    ╔═══════════════════════════════════════════════════════════╗
+    ║                    Dream Journal Entry                    ║
+    ║        ${dateStr} - ${timeStr}                         ║
+    ╚═══════════════════════════════════════════════════════════╝
+                            </pre>
+                        </div>
+                        <div class="dream-content">
+                            <div class="dream-text">${data.dream.content}</div>
+                            <br>
+                            <div class="dream-metadata">
+                                <div>Lucidity: ${data.dream.lucidity}/10</div>
+                                <div>Vividness: ${data.dream.vividness}/10</div>
+                                <div>Emotional tone: ${data.dream.emotion}</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Add to top of dream entries
+                    dreamEntriesDiv.insertBefore(dreamEntry, dreamEntriesDiv.firstChild);
+                    
+                    // Keep only the last 5 dream entries
+                    const dreams = dreamEntriesDiv.querySelectorAll('.dream-entry');
+                    if (dreams.length > 5) {
+                        dreams[dreams.length - 1].remove();
+                    }
+                }
+            } catch (error) {
+                console.error('Error generating dream entry:', error);
+            }
+        }
+
+        function startDreamGeneration() {
+            // Generate a dream every 8-15 minutes
+            if (window.dreamInterval) clearInterval(window.dreamInterval);
+            
+            window.dreamInterval = setInterval(() => {
+                generateDreamEntry();
+            }, Math.random() * 420000 + 480000); // Random between 8-15 minutes
+            
+            // Generate first dream after 2 minutes
+            setTimeout(generateDreamEntry, 120000);
+        }
+
         // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
+         document.addEventListener('DOMContentLoaded', function() {
             updateTime();
             setInterval(updateTime, 1000);
             document.getElementById('chatInput').focus();
             startThoughtGeneration();
+            startDreamGeneration(); // Add this line
         });
     </script>
 </body>
