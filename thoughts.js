@@ -15,12 +15,10 @@ class ThoughtsEngine {
         try {
             const context = this.conversationHistory.slice(-3).join('\n');
             
-            const response = await fetch('https://api.anthropic.com/v1/messages', {
+            const response = await fetch('/api/anthropic', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': window.anthropicKey,
-                    'anthropic-version': '2023-06-01'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     model: 'claude-sonnet-4-5-20250929',
