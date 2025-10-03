@@ -27,6 +27,13 @@ Keep it short, creative, and engaging. Write as if you're having a spontaneous t
       })
     });
 
+    console.log('Anthropic response status:', response.status);
+    
+    const data = await response.json();
+    
+    // ADD THIS LOG
+    console.log('Response data:', JSON.stringify(data).substring(0, 200));
+
     const data = await response.json();
     
     if (data.content && data.content[0]) {
@@ -47,4 +54,5 @@ Keep it short, creative, and engaging. Write as if you're having a spontaneous t
     });
   }
 }
+
 
