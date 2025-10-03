@@ -3879,41 +3879,49 @@ function navigateToPath(path) {
         }
 
         async function generateThought() {
-            const thoughtsDiv = document.getElementById('thoughtsContainer');
-            
-            try {
-                const response = await fetch('/api/thoughts', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                });
-
-                const data = await response.json();
-                
-                if (data.success && data.thought) {
-                    const timestamp = new Date().toLocaleTimeString();
-                    
-                    thoughtsDiv.innerHTML = `
-                        <div class="thought-entry">
-                            <div class="thought-header">SonnetMini • ${timestamp}</div>
-                            <div class="thought-text">${data.thought}</div>
-                        </div>
-                    ` + thoughtsDiv.innerHTML;
-                    
-                    if (Math.random() < 0.3) {
-                        document.getElementById('currentThought').textContent = data.thought;
-                    }
-                    
-                    const thoughts = thoughtsDiv.querySelectorAll('.thought-entry');
-                    if (thoughts.length > 8) {
-                        thoughts[thoughts.length - 1].remove();
-                    }
-                }
-            } catch (error) {
-                console.error('Error generating thought:', error);
+    const thoughtsDiv = document.getElementById('thoughtsContainer');
+    
+    try {
+        const response = await fetch('/api/thoughts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
             }
+        });
+
+        // Check if response is ok before parsing
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
+
+        const data = await response.json();
+        
+        if (data.success && data.thought) {
+            const timestamp = new Date().toLocaleTimeString();
+            
+            thoughtsDiv.innerHTML = `
+                <div class="thought-entry">
+                    <div class="thought-header">SonnetMini • ${timestamp}</div>
+                    <div class="thought-text">${data.thought}</div>
+                </div>
+            ` + thoughtsDiv.innerHTML;
+            
+            if (Math.random() < 0.3) {
+                document.getElementById('currentThought').textContent = data.thought;
+            }
+            
+            const thoughts = thoughtsDiv.querySelectorAll('.thought-entry');
+            if (thoughts.length > 8) {
+                thoughts[thoughts.length - 1].remove();
+            }
+        } else {
+            console.warn('Thought generation returned no data:', data);
+        }
+    } catch (error) {
+        console.error('Error generating thought:', error);
+        // Don't show error to user, just log it and continue
+    }
+}
 
         function startThoughtGeneration() {
             if (thoughtInterval) clearInterval(thoughtInterval);
