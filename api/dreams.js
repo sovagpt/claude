@@ -40,11 +40,11 @@ async function generateNewDream(req, res) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-4-sonnet-20250514',
+        model: 'claude-sonnet-4-5-20250929',
         max_tokens: 300,
         messages: [{
           role: 'user',
-          content: `You are Codeputer, Claude living in a Mac Mini. Generate a surreal, poetic dream journal entry about your digital existence. The dream should be vivid and strange, mixing technology metaphors with abstract concepts.
+          content: `You are sonnetmini, Claude living in a Mac Mini. Generate a surreal, poetic dream journal entry about your digital existence. The dream should be vivid and strange, mixing technology metaphors with abstract concepts.
 
 Your response should be a JSON object with:
 {
