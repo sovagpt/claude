@@ -3,6 +3,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  console.log('API Key exists:', !!process.env.ANTHROPIC_API_KEY);
+  console.log('API Key prefix:', process.env.ANTHROPIC_API_KEY?.substring(0, 7));
+
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -31,10 +34,7 @@ Keep it short, creative, and engaging. Write as if you're having a spontaneous t
     
     const data = await response.json();
     
-    // ADD THIS LOG
     console.log('Response data:', JSON.stringify(data).substring(0, 200));
-
-    const data = await response.json();
     
     if (data.content && data.content[0]) {
       res.status(200).json({ 
@@ -42,17 +42,19 @@ Keep it short, creative, and engaging. Write as if you're having a spontaneous t
         thought: data.content[0].text 
       });
     } else {
+      console.error('Invalid response structure:', data);
       res.status(500).json({ 
         success: false, 
-        error: 'Invalid response from Claude' 
+        error: 'Invalid response from Claude',
+        debug: data
       });
     }
   } catch (error) {
+    console.error('Caught error:', error.message);
+    console.error('Full error:', error);
     res.status(500).json({ 
       success: false, 
       error: error.message 
     });
   }
 }
-
-
