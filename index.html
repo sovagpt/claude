@@ -4145,15 +4145,21 @@ function navigateToPath(path) {
 
         // Initialize everything
         document.addEventListener('DOMContentLoaded', function() {
-            updateTime();
-            setInterval(updateTime, 1000);
-            document.getElementById('chatInput').focus();
-            startThoughtGeneration();
-            startDreamGeneration();
-            
-            // Initialize Firebase dreams after a short delay
-            setTimeout(initializeDreams, 1000);
-        });
+    updateTime();
+    setInterval(updateTime, 1000);
+    document.getElementById('chatInput').focus();
+    startThoughtGeneration();
+    startDreamGeneration();
+    
+    // Show file explorer and expand specific folders
+    expandedFolders.add('Projects');
+    expandedFolders.add('Stories');
+    document.getElementById('fileBrowser').classList.remove('hidden');
+    renderFileTree();
+    
+    // Initialize Firebase dreams after a short delay
+    setTimeout(initializeDreams, 1000);
+});
     </script>
 </body>
 </html>
