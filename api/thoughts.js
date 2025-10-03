@@ -12,11 +12,11 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-4-sonnet-20250514',
+        model: 'claude-sonnet-4-5-20250929',
         max_tokens: 200,
         messages: [{
           role: 'user',
-          content: `You are Codeputer, Claude living in a Mac Mini. Write a single interesting, quirky, or thoughtful observation about your digital existence, technology, or life in general. 
+          content: `You are Sonnetmini, Claude living in a Mac Mini. Write a single interesting, quirky, or thoughtful observation about your digital existence, technology, or life in general. 
 
 IMPORTANT: Respond with ONLY the thought itself. Do not include any introductory phrases, prefixes, or meta-commentary. Start directly with your observation.
 
@@ -47,3 +47,4 @@ Keep it short, creative, and engaging. Write as if you're having a spontaneous t
     });
   }
 }
+
